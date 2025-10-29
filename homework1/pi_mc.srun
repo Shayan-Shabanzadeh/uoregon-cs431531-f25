@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --account=cis431_531
+#SBATCH --partition=compute
+#SBATCH --job-name=mc_matrix
+#SBATCH --output=output/mc_matrix_%A.out
+#SBATCH --error=output/mc_matrix_%A.err
+#SBATCH --time=00:25:00
+#SBATCH --mem=8G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+GUESSES="100000 1000000 10000000 100000000"
+RUNS=20
+
+echo "BEGIN MATRIX method=montecarlo threads=$OMP_NUM_THREADS runs=$RUNS guesses_list=[$GUESSES]"
+for G in $GUESSES; do
+  echo "BEGIN BLOCK guesses=$G"
+  for i in $(seq 1 $RUNS); do
+      ./pi $G
+  done
+  echo "END BLOCK guesses=$G"
+done
+echo "END MATRIX"

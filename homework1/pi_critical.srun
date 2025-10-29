@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --account=cis431_531
+#SBATCH --partition=compute
+#SBATCH --job-name=pi_critical_matrix
+#SBATCH --output=output/pi_critical_matrix_%A.out
+#SBATCH --error=output/pi_critical_matrix_%A.err
+#SBATCH --time=00:20:00
+#SBATCH --mem=8G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+STEPS="100000 1000000 10000000 100000000"
+RUNS=20
+
+echo "BEGIN MATRIX method=integration variant=critical threads=$OMP_NUM_THREADS runs=$RUNS steps_list=[$STEPS]"
+for N in $STEPS; do
+  echo "BEGIN BLOCK steps=$N"
+  for i in $(seq 1 $RUNS); do
+      ./pi $N 
+  done
+  echo "END BLOCK steps=$N"
+done
+echo "END MATRIX"
