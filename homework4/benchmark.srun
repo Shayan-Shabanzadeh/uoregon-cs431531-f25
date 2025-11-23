@@ -1,0 +1,55 @@
+#!/bin/bash
+#SBATCH --account=cis431_531
+#SBATCH --job-name=spmv_sweep
+#SBATCH --output=results_%j.out
+#SBATCH --error=results_%j.err
+#SBATCH --partition=gpu
+#SBATCH --time=1-00:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=28
+
+module load gcc/8.5.0
+export CUDA_HOME=/packages/cuda/11.2.0
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+export OMP_PROC_BIND=true
+export OMP_NUM_THREADS=28
+
+CSR_OUT="csr_results.csv"
+ELL_OUT="ell_results.csv"
+
+echo "grid_size,block_size,csr_time" > $CSR_OUT
+echo "grid_size,block_size,ell_time" > $ELL_OUT
+
+GRID_LIST=(62451 31225 15612 7806 3903)
+BLOCK_LIST=(32 64 128 256 512)
+
+for GRID_SIZE in "${GRID_LIST[@]}"; do
+    for BLOCK_SIZE in "${BLOCK_LIST[@]}"; do
+
+        echo "Running GRID=$GRID_SIZE BLOCK=$BLOCK_SIZE"
+
+        export GRID_SIZE
+        export BLOCK_SIZE
+
+        make clean > /dev/null
+        make > /dev/null
+
+        RUN_OUTPUT=$(./spmv cant/cant.mtx cant/b.mtx ./temp_out.mtx)
+
+        CSR_TIME=$(echo "$RUN_OUTPUT" \
+            | awk '/GPU CSR SpMV/{flag=1} flag && /Exec time/{print $5; flag=0}')
+
+        ELL_TIME=$(echo "$RUN_OUTPUT" \
+            | awk '/GPU ELL SpMV/{flag=1} flag && /Exec time/{print $5; flag=0}')
+
+        echo "$GRID_SIZE,$BLOCK_SIZE,$CSR_TIME" >> $CSR_OUT
+        echo "$GRID_SIZE,$BLOCK_SIZE,$ELL_TIME" >> $ELL_OUT
+
+    done
+done
+
+echo "DONE."
