@@ -1,0 +1,5 @@
+Running OMP threads = 1
+Running OMP threads = 2
+Running OMP threads = 4
+Running OMP threads = 8
+OMP scaling experiment complete. Summary: out_omp/summary/omp_scaling_40621474.csv

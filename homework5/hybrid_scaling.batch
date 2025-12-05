@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH --account=cis431_531
+#SBATCH --partition=compute
+#SBATCH --job-name=hybrid_scaling
+#SBATCH --output=hybrid_scaling_%A.out
+#SBATCH --error=hybrid_scaling_%A.err
+#SBATCH --time=8
+#SBATCH --mem=50G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --cpus-per-task=1
+
+module load openmpi/4.1.5
+
+OUTDIR="out_hybrid"
+LOGDIR="$OUTDIR/logs"
+RESDIR="$OUTDIR/results"
+SUMDIR="$OUTDIR/summary"
+mkdir -p "$LOGDIR" "$RESDIR" "$SUMDIR"
+
+CSV="$SUMDIR/hybrid_scaling_${SLURM_JOB_ID}.csv"
+echo "mpi_ranks,omp_threads,spmv" > "$CSV"
+
+MPI_LIST=(1 2 4)
+OMP_LIST=(1 2 4)
+
+for np in "${MPI_LIST[@]}"; do
+    for omp in "${OMP_LIST[@]}"; do
+
+        echo "MPI ranks = $np | OMP threads = $omp"
+
+        export OMP_NUM_THREADS=$omp
+        TMP="$LOGDIR/np${np}_omp${omp}.log"
+        RESULT="$RESDIR/result_np${np}_omp${omp}.mtx"
+
+        mpirun -np $np ./spmv cant/cant.mtx cant/b.mtx "$RESULT" > "$TMP"
+
+        sp=$(grep '^COO SpMV' "$TMP" | awk '{print $NF}')
+        echo "$np,$omp,$sp" >> "$CSV"
+    done
+done
+
+echo "Hybrid scaling experiment complete. Summary: $CSV"

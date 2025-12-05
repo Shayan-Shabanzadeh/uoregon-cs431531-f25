@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --account=cis431_531
+#SBATCH --partition=compute
+#SBATCH --job-name=omp_scaling
+#SBATCH --output=omp_scaling_%A.out
+#SBATCH --error=omp_scaling_%A.err
+#SBATCH --time=5
+#SBATCH --mem=50G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
+
+module load openmpi/4.1.5
+
+OUTDIR="out_omp"
+LOGDIR="$OUTDIR/logs"
+RESDIR="$OUTDIR/results"
+SUMDIR="$OUTDIR/summary"
+mkdir -p "$LOGDIR" "$RESDIR" "$SUMDIR"
+
+CSV="$SUMDIR/omp_scaling_${SLURM_JOB_ID}.csv"
+echo "omp_threads,spmv" > "$CSV"
+
+OMP_LIST=(1 2 4 8)
+
+for omp in "${OMP_LIST[@]}"; do
+    echo "Running OMP threads = $omp"
+
+    export OMP_NUM_THREADS=$omp
+    TMP="$LOGDIR/omp${omp}.log"
+    RESULT="$RESDIR/result_omp${omp}.mtx"
+
+    mpirun -np 1 ./spmv cant/cant.mtx cant/b.mtx "$RESULT" > "$TMP"
+
+    sp=$(grep '^COO SpMV' "$TMP" | awk '{print $NF}')
+    echo "$omp,$sp" >> "$CSV"
+done
+
+echo "OMP scaling experiment complete. Summary: $CSV"

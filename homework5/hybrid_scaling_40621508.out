@@ -1,0 +1,10 @@
+MPI ranks = 1 | OMP threads = 1
+MPI ranks = 1 | OMP threads = 2
+MPI ranks = 1 | OMP threads = 4
+MPI ranks = 2 | OMP threads = 1
+MPI ranks = 2 | OMP threads = 2
+MPI ranks = 2 | OMP threads = 4
+MPI ranks = 4 | OMP threads = 1
+MPI ranks = 4 | OMP threads = 2
+MPI ranks = 4 | OMP threads = 4
+Hybrid scaling experiment complete. Summary: out_hybrid/summary/hybrid_scaling_40621508.csv

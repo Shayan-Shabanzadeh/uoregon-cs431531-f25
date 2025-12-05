@@ -1,0 +1,5 @@
+Running MPI ranks = 1
+Running MPI ranks = 2
+Running MPI ranks = 4
+Running MPI ranks = 8
+MPI scaling experiment complete. Summary: out_mpi/summary/mpi_scaling_40621410.csv
